@@ -73,7 +73,7 @@ async function handleDownload(id: string): Promise<Response> {
 // 启动服务
 Deno.serve({
   port: CONFIG.port,
-  async handler(req: Request) {
+  handler(req: Request) {
     const url = new URL(req.url);
     //sconsole.log(req);
     // 路由处理
@@ -91,31 +91,37 @@ Deno.serve({
 
 // 初始化目录
 await Deno.mkdir(CONFIG.uploadDir, { recursive: true });
-//启动时删除所有temp_images下的文件
-for await (const entry of Deno.readDir(CONFIG.uploadDir)) {
-  const filePath = `${CONFIG.uploadDir}/${entry.name}`;
-  try {
-    const file = await Deno.readFile(filePath);
-    await Deno.remove(filePath);
-  } catch {
-    console.log("File not found");
-  }
-}
+
 
 //每十分钟检查一次所有记录的文件名称和时间戳，并删除其中超过十分钟的
-setInterval(async () => {
-  for (const [key, value] of fileMap) {
-    if (Date.now() - value > 10 * 60 * 1000) {
-      fileMap.delete(key);
-      const filePath = `${CONFIG.uploadDir}/${key}`;
-      try {
-        const file = await Deno.readFile(filePath);
-        await Deno.remove(filePath);
-      } catch {
-        console.log("File not found");
-      }
+async function autoDelete() {
+  //启动时删除所有temp_images下的文件
+  for await (const entry of Deno.readDir(CONFIG.uploadDir)) {
+    const filePath = `${CONFIG.uploadDir}/${entry.name}`;
+    try {
+      const _file = await Deno.readFile(filePath);
+      await Deno.remove(filePath);
+    } catch {
+      console.log("File not found");
     }
   }
-}, 10 * 60 * 1000);
+  //每十分钟检查一次
+  setInterval(async () => {
+    for (const [key, value] of fileMap) {
+      if (Date.now() - value > 10 * 60 * 1000) {
+        fileMap.delete(key);
+        const filePath = `${CONFIG.uploadDir}/${key}`;
+        try {
+          const _file = await Deno.readFile(filePath);
+          await Deno.remove(filePath);
+        } catch {
+          console.log("File not found");
+        }
+      }
+    }
+  }, 10 * 60 * 1000);
+}
+
+//autoDelete();
 
 console.log(`Server running at http://localhost:${CONFIG.port}`);
