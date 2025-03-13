@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>图床上传</title>
+    <title>简易图床</title>
     <style>
         * {
             margin: 0;
@@ -154,12 +154,21 @@
                 padding: 20px;
             }
         }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px 0;
+            color: #666;
+            font-size: 14px;
+            border-top: 1px solid #eee;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>图床上传</h1>
+            <h1>简易图床</h1>
             <p>支持拖拽或点击上传图片</p>
         </div>
 
@@ -187,6 +196,10 @@
 
         <div class="error-message" id="errorMessage"></div>
     </div>
+
+    <footer style="text-align: center; margin-top: 30px; color: #666; font-size: 14px;">
+        © 2024 贼猫工作室 版权所有
+    </footer>
 
     <script>
         const dropZone = document.getElementById('dropZone');
