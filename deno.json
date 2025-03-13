@@ -1,0 +1,7 @@
+{
+    "tasks": {
+      "start": "deno run --allow-net --allow-write --allow-read picbed.ts",
+      "test": "deno test --allow-net",
+      "lint": "deno lint"
+    }
+  }
