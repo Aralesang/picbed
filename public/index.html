@@ -155,13 +155,24 @@
             }
         }
 
+        .container {
+            flex: 1;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
         footer {
             text-align: center;
-            margin-top: 30px;
-            padding: 20px 0;
-            color: #666;
-            font-size: 14px;
-            border-top: 1px solid #eee;
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            padding: 10px 0;
+            color: #999;
+            font-size: 12px;
+            background-color: #f5f5f5;
+            width: 100%;
         }
     </style>
 </head>
@@ -196,10 +207,6 @@
 
         <div class="error-message" id="errorMessage"></div>
     </div>
-
-    <footer style="text-align: center; margin-top: 30px; color: #666; font-size: 14px;">
-        © 2024 贼猫工作室 版权所有
-    </footer>
 
     <script>
         const dropZone = document.getElementById('dropZone');
@@ -313,5 +320,8 @@
             }
         });
     </script>
+    <footer style="text-align: center; padding: 20px 0; color: #999; font-size: 12px;">
+        © 2024 贼猫工作室
+    </footer>
 </body>
 </html>
