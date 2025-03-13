@@ -70,19 +70,44 @@ async function handleDownload(id: string): Promise<Response> {
   }
 }
 
+// 处理静态文件
+async function handleStaticFile(pathname: string): Promise<Response> {
+  try {
+    const filePath = `./public${pathname}`;
+    const file = await Deno.readFile(filePath);
+    const contentType = pathname.endsWith('.html') ? 'text/html' :
+                       pathname.endsWith('.css') ? 'text/css' :
+                       pathname.endsWith('.js') ? 'application/javascript' :
+                       'application/octet-stream';
+    
+    return new Response(file, {
+      headers: { "Content-Type": `${contentType}; charset=utf-8` },
+    });
+  } catch {
+    return new Response("File not found", { status: 404 });
+  }
+}
+
 // 启动服务
 Deno.serve({
   port: CONFIG.port,
   handler(req: Request) {
     const url = new URL(req.url);
-    //sconsole.log(req);
+    
     // 路由处理
     if (req.method === "POST" && url.pathname === "/upload") {
-      //console.log("开始处理上传");
-
       return handleUpload(req);
-    } else if (req.method === "GET" && url.pathname !== "/upload") {
-      return handleDownload(url.pathname.slice(1)); // 提取ID
+    } else if (req.method === "GET") {
+      // 处理根路径请求
+      if (url.pathname === "/" || url.pathname === "/index.html") {
+        return handleStaticFile("/index.html");
+      }
+      // 处理静态文件
+      if (url.pathname.startsWith("/static/")) {
+        return handleStaticFile(url.pathname);
+      }
+      // 处理图片下载
+      return handleDownload(url.pathname.slice(1));
     }
 
     return new Response("Not Found", { status: 404 });
