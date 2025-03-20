@@ -14,9 +14,6 @@ function generateRandomId(): string {
   return Array.from(cryptoArray, byte => chars[byte % chars.length]).join('');
 }
 
-//记录所有生成的文件名和时间戳
-const fileMap = new Map();
-
 // 处理上传
 async function handleUpload(req: Request): Promise<Response> {
   try {
@@ -44,7 +41,6 @@ async function handleUpload(req: Request): Promise<Response> {
     // 保存文件
     const randomId = `${generateRandomId()}_${Date.now()}`;
     const filePath = `${CONFIG.uploadDir}/${randomId}.${fileExtension}`;
-    fileMap.set(randomId + "." + fileExtension, Date.now());
     await Deno.writeFile(filePath, new Uint8Array(await file.arrayBuffer()));
 
     // 返回外链
@@ -78,10 +74,10 @@ async function handleStaticFile(pathname: string): Promise<Response> {
     const filePath = `./public${pathname}`;
     const file = await Deno.readFile(filePath);
     const contentType = pathname.endsWith('.html') ? 'text/html' :
-                       pathname.endsWith('.css') ? 'text/css' :
-                       pathname.endsWith('.js') ? 'application/javascript' :
-                       'application/octet-stream';
-    
+      pathname.endsWith('.css') ? 'text/css' :
+        pathname.endsWith('.js') ? 'application/javascript' :
+          'application/octet-stream';
+
     return new Response(file, {
       headers: { "Content-Type": `${contentType}; charset=utf-8`, "Access-Control-Allow-Origin": "*" },
     });
@@ -95,7 +91,7 @@ Deno.serve({
   port: CONFIG.port,
   handler(req: Request) {
     const url = new URL(req.url);
-    
+
     // 路由处理
     if (req.method === "POST" && url.pathname === "/upload") {
       return handleUpload(req);
@@ -120,35 +116,33 @@ Deno.serve({
 await Deno.mkdir(CONFIG.uploadDir, { recursive: true });
 
 
-//每十分钟检查一次所有记录的文件名称和时间戳，并删除其中超过十分钟的
-async function _autoDelete() {
-  //启动时删除所有temp_images下的文件
-  for await (const entry of Deno.readDir(CONFIG.uploadDir)) {
-    const filePath = `${CONFIG.uploadDir}/${entry.name}`;
-    try {
-      const _file = await Deno.readFile(filePath);
-      await Deno.remove(filePath);
-    } catch {
-      console.log("File not found");
-    }
-  }
-  //每十分钟检查一次
-  setInterval(async () => {
-    for (const [key, value] of fileMap) {
-      if (Date.now() - value > 10 * 60 * 1000) {
-        fileMap.delete(key);
-        const filePath = `${CONFIG.uploadDir}/${key}`;
-        try {
-          const _file = await Deno.readFile(filePath);
-          await Deno.remove(filePath);
-        } catch {
-          console.log("File not found");
-        }
+//自动删除文件
+function autoDelete() {
+  //删除间隔(秒)
+  const lastTime = 10 * 60 * 1000;
+  const delete_file = async () => {
+    //获取文件名称列表
+    const files = await Deno.readDir(CONFIG.uploadDir);
+    //文件名称用字符_分割，前面是随机字符，后面是创建时间，扫描全部文件，对比当前时间,删除超过删除间隔的文件
+    for await (const file of files) {
+      const fileName = file.name;
+      const fileTime = fileName.split('_')[1].split('.')[0];
+      const nowTime = Date.now();
+      if (nowTime - Number(fileTime) > lastTime) {
+        //删除文件
+        await Deno.remove(`${CONFIG.uploadDir}/${fileName}`);
+        console.log(`删除文件${fileName}`);
       }
     }
-  }, 10 * 60 * 1000);
+  }
+  //启动时立即调用一次
+  delete_file();
+  //每十分钟检查一次
+  setInterval(async () => {
+    await delete_file();
+  }, lastTime);
 }
 
-//autoDelete();
+autoDelete();
 
 console.log(`Server running at http://localhost:${CONFIG.port}`);
