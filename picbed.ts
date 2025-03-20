@@ -49,11 +49,13 @@ async function handleUpload(req: Request): Promise<Response> {
 
     // 返回外链
     const url = `http://${req.headers.get("host")}/${randomId}.${fileExtension}`;
-    return Response.json({ status: 200, url });
+    return new Response(JSON.stringify({ status: 200, url }), {
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    });
 
   } catch (error) {
     console.error("Upload error:", error);
-    return new Response("Server Error", { status: 500 });
+    return new Response("Server Error", { status: 500, headers: { "Access-Control-Allow-Origin": "*" } });
   }
 }
 
@@ -63,10 +65,10 @@ async function handleDownload(id: string): Promise<Response> {
   try {
     const file = await Deno.readFile(filePath);
     return new Response(file, {
-      headers: { "Content-Type": "image/jpeg" }, // 自动识别类型可自行扩展
+      headers: { "Content-Type": "image/jpeg", "Access-Control-Allow-Origin": "*" }, // 自动识别类型可自行扩展
     });
   } catch {
-    return new Response("File not found", { status: 404 });
+    return new Response("File not found", { status: 404, headers: { "Access-Control-Allow-Origin": "*" } });
   }
 }
 
@@ -81,10 +83,10 @@ async function handleStaticFile(pathname: string): Promise<Response> {
                        'application/octet-stream';
     
     return new Response(file, {
-      headers: { "Content-Type": `${contentType}; charset=utf-8` },
+      headers: { "Content-Type": `${contentType}; charset=utf-8`, "Access-Control-Allow-Origin": "*" },
     });
   } catch {
-    return new Response("File not found", { status: 404 });
+    return new Response("File not found", { status: 404, headers: { "Access-Control-Allow-Origin": "*" } });
   }
 }
 
@@ -110,7 +112,7 @@ Deno.serve({
       return handleDownload(url.pathname.slice(1));
     }
 
-    return new Response("Not Found", { status: 404 });
+    return new Response("Not Found", { status: 404, headers: { "Access-Control-Allow-Origin": "*" } });
   },
 });
 
